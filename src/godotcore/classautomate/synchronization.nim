@@ -46,5 +46,6 @@ macro gdsync*(body): untyped =
 
 proc register*(T: typedesc) =
   let info = T.creationInfo(false, false)
-  interface_ClassDB_registerExtensionClass(environment.library, addr className(T), addr className(T.Super), addr info)
+  #TODO: Check which version where using and use the appropriate one, 3 is latests, for now.
+  interface_ClassDB_registerExtensionClass3(environment.library, addr className(T), addr className(T.Super), addr info)
   invoke contract_method(T)

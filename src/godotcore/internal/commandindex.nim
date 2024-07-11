@@ -135,10 +135,14 @@ var
   interfaceRefGetObject*: InterfaceRefGetObject
   interfaceRefSetObject*: InterfaceRefSetObject
   interfaceScriptInstanceCreate*: InterfaceScriptInstanceCreate
+  interfaceScriptInstanceCreate2*: InterfaceScriptInstanceCreate2
+  interfaceScriptInstanceCreate3*: InterfaceScriptInstanceCreate3
   interfaceClassdbConstructObject*: InterfaceClassdbConstructObject
   interfaceClassdbGetMethodBind*: InterfaceClassdbGetMethodBind
   interfaceClassdbGetClassTag*: InterfaceClassdbGetClassTag
   interfaceClassdbRegisterExtensionClass*: InterfaceClassdbRegisterExtensionClass
+  interfaceClassdbRegisterExtensionClass2*: InterfaceClassdbRegisterExtensionClass2
+  interfaceClassdbRegisterExtensionClass3*: InterfaceClassdbRegisterExtensionClass3
   interfaceClassdbRegisterExtensionClassMethod*: InterfaceClassdbRegisterExtensionClassMethod
   interfaceClassdbRegisterExtensionClassIntegerConstant*: InterfaceClassdbRegisterExtensionClassIntegerConstant
   interfaceClassdbRegisterExtensionClassProperty*: InterfaceClassdbRegisterExtensionClassProperty
@@ -273,11 +277,13 @@ proc load* =
   interfaceObjectGetInstanceId = cast[InterfaceObjectGetInstanceId](getProcAddress(cstring "object_get_instance_id"))
   interfaceRefGetObject = cast[InterfaceRefGetObject](getProcAddress(cstring "ref_get_object"))
   interfaceRefSetObject = cast[InterfaceRefSetObject](getProcAddress(cstring "ref_set_object"))
-  interfaceScriptInstanceCreate = cast[InterfaceScriptInstanceCreate](getProcAddress(cstring "script_instance_create"))
+  interfaceScriptInstanceCreate3 = cast[InterfaceScriptInstanceCreate3](getProcAddress(cstring "script_instance_create3"))
   interfaceClassdbConstructObject = cast[InterfaceClassdbConstructObject](getProcAddress(cstring "classdb_construct_object"))
   interfaceClassdbGetMethodBind = cast[InterfaceClassdbGetMethodBind](getProcAddress(cstring "classdb_get_method_bind"))
   interfaceClassdbGetClassTag = cast[InterfaceClassdbGetClassTag](getProcAddress(cstring "classdb_get_class_tag"))
   interfaceClassdbRegisterExtensionClass = cast[InterfaceClassdbRegisterExtensionClass](getProcAddress(cstring "classdb_register_extension_class"))
+  interfaceClassdbRegisterExtensionClass2 = cast[InterfaceClassdbRegisterExtensionClass2](getProcAddress(cstring "classdb_register_extension_class2"))
+  interfaceClassdbRegisterExtensionClass3 = cast[InterfaceClassdbRegisterExtensionClass3](getProcAddress(cstring "classdb_register_extension_class3"))
   interfaceClassdbRegisterExtensionClassMethod = cast[InterfaceClassdbRegisterExtensionClassMethod](getProcAddress(cstring "classdb_register_extension_class_method"))
   interfaceClassdbRegisterExtensionClassIntegerConstant = cast[InterfaceClassdbRegisterExtensionClassIntegerConstant](getProcAddress(cstring "classdb_register_extension_class_integer_constant"))
   interfaceClassdbRegisterExtensionClassProperty = cast[InterfaceClassdbRegisterExtensionClassProperty](getProcAddress(cstring "classdb_register_extension_class_property"))

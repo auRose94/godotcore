@@ -140,17 +140,23 @@ type
     default_arguments*: ptr VariantPtr
   ClassGetPropertyList* = proc (p_instance: ClassInstancePtr; r_count: ptr uint32_t): ptr PropertyInfo {.gdcall.}
   ClassFreePropertyList* = proc (p_instance: ClassInstancePtr; p_list: ptr PropertyInfo) {.gdcall.}
+  ClassFreePropertyList2* = proc (p_instance: ClassInstancePtr; p_list: ptr PropertyInfo, p_count: uint32) {.gdcall.}
   ClassPropertyCanRevert* = proc (p_instance: ClassInstancePtr; p_name: ConstStringNamePtr): Bool {.gdcall.}
   ClassPropertyGetRevert* = proc (p_instance: ClassInstancePtr; p_name: ConstStringNamePtr; r_ret: VariantPtr): Bool {.gdcall.}
+  ClassValidateProperty* = proc ( p_instance: ClassInstancePtr; p_property: ptr PropertyInfo): Bool {.gdcall.}
   ClassNotification* = proc (p_instance: ClassInstancePtr; p_what: int32_t) {.gdcall.}
+  ClassNotification2* = proc (p_instance: ClassInstancePtr; p_what: int32_t, p_reverse: bool) {.gdcall.}
   ClassToString* = proc (p_instance: ClassInstancePtr; r_is_valid: ptr Bool; p_out: StringPtr) {.gdcall.}
   ClassReference* = proc (p_instance: ClassInstancePtr) {.gdcall.}
   ClassUnreference* = proc (p_instance: ClassInstancePtr) {.gdcall.}
   ClassCallVirtual* = proc (p_instance: ClassInstancePtr; p_args: ptr UncheckedArray[ConstTypePtr]; r_ret: TypePtr) {.gdcall.}
   ClassCreateInstance* = proc (p_userdata: pointer): ObjectPtr {.gdcall.}
   ClassFreeInstance* = proc (p_userdata: pointer; p_instance: ClassInstancePtr) {.gdcall.}
+  ClassRecreateInstance* = proc (p_userdata: pointer, p_object: ObjectPtr): ObjectPtr {.gdcall.}
   ClassGetVirtual* = proc (p_userdata: pointer; p_name: ConstStringNamePtr): ClassCallVirtual {.gdcall.}
-  ClassCreationInfo* {.bycopy.} = object
+  ClassGetVirtualCallData* = proc (p_userdata: pointer; p_name: ConstStringNamePtr): pointer {.gdcall.}
+  ClassCallVirtualWithData* = proc (p_instance: ClassInstancePtr; p_name: ConstStringNamePtr; p_virtual_call_userdata: pointer; p_args: UncheckedArray[ConstTypePtr]; r_ret: TypePtr) {.gdcall.}
+  ClassCreationInfo* {.bycopy.} = object # DEPRECATED, USE 3
     is_virtual*: Bool
     is_abstract*: Bool
     set_func*: ClassSet
@@ -171,6 +177,57 @@ type
 
     get_rid_func*: ClassGetRID
     class_userdata*: pointer
+
+  ClassCreationInfo2* {.bycopy.} = object # DEPRECATED, USE 3
+    is_virtual*: Bool
+    is_abstract*: Bool
+    is_exposed*: Bool
+    is_runtime*: Bool
+    set_func*: ClassSet
+    get_func*: ClassGet
+    get_property_list_func*: ClassGetPropertyList
+    free_property_list_func*: ClassFreePropertyList
+    property_can_revert_func*: ClassPropertyCanRevert
+    property_get_revert_func*: ClassPropertyGetRevert
+    validate_property_func*: ClassValidateProperty
+    notification_func*: ClassNotification2
+    to_string_func*: ClassToString
+    reference_func*: ClassReference
+    unreference_func*: ClassUnreference
+    create_instance_func*: ClassCreateInstance
+    free_instance_func*: ClassFreeInstance
+    recreate_instance_func*: ClassRecreateInstance
+    get_virtual_func*: ClassGetVirtual
+    get_virtual_call_data_func*: ClassGetVirtualCallData
+    call_virtual_with_data_func*: ClassCallVirtualWithData
+    get_rid_func*: ClassGetRID
+    class_userdata*: pointer
+
+  ClassCreationInfo3* {.bycopy.} = object
+    is_virtual*: Bool
+    is_abstract*: Bool
+    is_exposed*: Bool
+    is_runtime*: Bool
+    set_func*: ClassSet
+    get_func*: ClassGet
+    get_property_list_func*: ClassGetPropertyList
+    free_property_list_func*: ClassFreePropertyList2
+    property_can_revert_func*: ClassPropertyCanRevert
+    property_get_revert_func*: ClassPropertyGetRevert
+    validate_property_func*: ClassValidateProperty
+    notification_func*: ClassNotification2
+    to_string_func*: ClassToString
+    reference_func*: ClassReference
+    unreference_func*: ClassUnreference
+    create_instance_func*: ClassCreateInstance
+    free_instance_func*: ClassFreeInstance
+    recreate_instance_func*: ClassRecreateInstance
+    get_virtual_func*: ClassGetVirtual
+    get_virtual_call_data_func*: ClassGetVirtualCallData
+    call_virtual_with_data_func*: ClassCallVirtualWithData
+    get_rid_func*: ClassGetRID
+    class_userdata*: pointer
+
 
   ClassLibraryPtr* = pointer
 type
@@ -223,7 +280,10 @@ type
   ScriptInstanceGet* = proc (p_instance: ScriptInstanceDataPtr; p_name: ConstStringNamePtr; r_ret: VariantPtr): Bool {.gdcall.}
   ScriptInstanceGetPropertyList* = proc (p_instance: ScriptInstanceDataPtr; r_count: ptr uint32_t): ptr PropertyInfo {.gdcall.}
   ScriptInstanceFreePropertyList* = proc (p_instance: ScriptInstanceDataPtr; p_list: ptr PropertyInfo) {.gdcall.}
+  ScriptInstanceFreePropertyList2* = proc (p_instance: ScriptInstanceDataPtr; p_list: ptr PropertyInfo, p_count: uint32) {.gdcall.}
+  ScriptInstanceGetClassCategory* = proc ( p_instance: ScriptInstanceDataPtr; p_class_category: ptr PropertyInfo) {.gdcall.}
   ScriptInstanceGetPropertyType* = proc (p_instance: ScriptInstanceDataPtr; p_name: ConstStringNamePtr; r_is_valid: ptr Bool): VariantType {.gdcall.}
+  ScriptInstanceValidateProperty* = proc ( p_instance: ScriptInstanceDataPtr; p_property: ptr PropertyInfo): Bool {.gdcall.}
   ScriptInstancePropertyCanRevert* = proc (p_instance: ScriptInstanceDataPtr; p_name: ConstStringNamePtr): Bool {.gdcall.}
   ScriptInstancePropertyGetRevert* = proc (p_instance: ScriptInstanceDataPtr; p_name: ConstStringNamePtr; r_ret: VariantPtr): Bool {.gdcall.}
   ScriptInstanceGetOwner* = proc (p_instance: ScriptInstanceDataPtr): ObjectPtr {.gdcall.}
@@ -231,9 +291,12 @@ type
   ScriptInstanceGetPropertyState* = proc (p_instance: ScriptInstanceDataPtr; p_add_func: ScriptInstancePropertyStateAdd; p_userdata: pointer) {.gdcall.}
   ScriptInstanceGetMethodList* = proc (p_instance: ScriptInstanceDataPtr; r_count: ptr uint32_t): ptr MethodInfo {.gdcall.}
   ScriptInstanceFreeMethodList* = proc (p_instance: ScriptInstanceDataPtr; p_list: ptr MethodInfo) {.gdcall.}
+  ScriptInstanceFreeMethodList2* = proc (p_instance: ScriptInstanceDataPtr; p_list: ptr MethodInfo, p_count: uint32) {.gdcall.}
   ScriptInstanceHasMethod* = proc (p_instance: ScriptInstanceDataPtr; p_name: ConstStringNamePtr): Bool {.gdcall.}
+  ScriptInstanceGetMethodArgumentCount* = proc ( p_instance: ScriptInstanceDataPtr; p_name: ConstStringNamePtr, r_is_valid: ptr Bool): Int {.gdcall.}
   ScriptInstanceCall* = proc (p_self: ScriptInstanceDataPtr; p_method: ConstStringNamePtr; p_args: ptr ConstVariantPtr; p_argument_count: Int; r_return: VariantPtr; r_error: ptr CallError) {.gdcall.}
   ScriptInstanceNotification* = proc (p_instance: ScriptInstanceDataPtr; p_what: int32_t) {.gdcall.}
+  ScriptInstanceNotification2* = proc (p_instance: ScriptInstanceDataPtr; p_what: int32_t, p_reversed: bool) {.gdcall.}
   ScriptInstanceToString* = proc (p_instance: ScriptInstanceDataPtr; r_is_valid: ptr Bool; r_out: StringPtr) {.gdcall.}
   ScriptInstanceRefCountIncremented* = proc (p_instance: ScriptInstanceDataPtr) {.gdcall.}
   ScriptInstanceRefCountDecremented* = proc (p_instance: ScriptInstanceDataPtr): Bool {.gdcall.}
@@ -244,7 +307,7 @@ type
   ScriptInstanceFree* = proc (p_instance: ScriptInstanceDataPtr) {.gdcall.}
   ScriptInstancePtr* = pointer
 type
-  ScriptInstanceInfo* {.bycopy.} = object
+  ScriptInstanceInfo* {.bycopy.} = object # DEPRECATED, USE 3
     set_func*: ScriptInstanceSet
     get_func*: ScriptInstanceGet
     get_property_list_func*: ScriptInstanceGetPropertyList
@@ -268,6 +331,77 @@ type
     get_fallback_func*: ScriptInstanceGet
     get_language_func*: ScriptInstanceGetLanguage
     free_func*: ScriptInstanceFree
+type
+  ScriptInstanceInfo2* {.bycopy.} = object # DEPRECATED, USE 3
+    set_func*: ScriptInstanceSet
+    get_func*: ScriptInstanceGet
+    get_property_list_func*: ScriptInstanceGetPropertyList
+    free_property_list_func*: ScriptInstanceFreePropertyList
+    get_class_category_func*: ScriptInstanceGetClassCategory
+    property_can_revert_func*: ScriptInstancePropertyCanRevert
+    property_get_revert_func*: ScriptInstancePropertyGetRevert
+    get_owner_func*: ScriptInstanceGetOwner
+    get_property_state_func*: ScriptInstanceGetPropertyState
+    get_method_list_func*: ScriptInstanceGetMethodList
+    free_method_list_func*: ScriptInstanceFreeMethodList
+    get_property_type_func*: ScriptInstanceGetPropertyType
+    validate_property_func*: ScriptInstanceValidateProperty
+    has_method_func*: ScriptInstanceHasMethod
+    call_func*: ScriptInstanceCall
+    notification_func*: ScriptInstanceNotification2
+    to_string_func*: ScriptInstanceToString
+    refcount_incremented_func*: ScriptInstanceRefCountIncremented
+    refcount_decremented_func*: ScriptInstanceRefCountDecremented
+    get_script_func*: ScriptInstanceGetScript
+    is_placeholder_func*: ScriptInstanceIsPlaceholder
+    set_fallback_func*: ScriptInstanceSet
+    get_fallback_func*: ScriptInstanceGet
+    get_language_func*: ScriptInstanceGetLanguage
+    free_func*: ScriptInstanceFree
+
+type
+  ScriptInstanceInfo3* {.bycopy.} = object
+    set_func*: ScriptInstanceSet
+    get_func*: ScriptInstanceGet
+
+    get_property_list_func*: ScriptInstanceGetPropertyList
+    free_property_list_func*: ScriptInstanceFreePropertyList2
+    get_class_category_func*: ScriptInstanceGetClassCategory
+
+    property_can_revert_func*: ScriptInstancePropertyCanRevert
+    property_get_revert_func*: ScriptInstancePropertyGetRevert
+
+    get_owner_func*: ScriptInstanceGetOwner
+    get_property_state_func*: ScriptInstanceGetPropertyState
+
+    get_method_list_func*: ScriptInstanceGetMethodList
+    free_method_list_func*: ScriptInstanceFreeMethodList2
+    get_property_type_func*: ScriptInstanceGetPropertyType
+    validate_property_func*: ScriptInstanceValidateProperty
+
+    has_method_func*: ScriptInstanceHasMethod
+
+    get_method_argument_count_func*: ScriptInstanceGetMethodArgumentCount
+
+    call_func*: ScriptInstanceCall
+    notification_func*: ScriptInstanceNotification2
+
+    to_string_func*: ScriptInstanceToString
+
+    refcount_incremented_func*: ScriptInstanceRefCountIncremented
+    refcount_decremented_func*: ScriptInstanceRefCountDecremented
+
+    get_script_func*: ScriptInstanceGetScript
+
+    is_placeholder_func*: ScriptInstanceIsPlaceholder
+
+    set_fallback_func*: ScriptInstanceSet
+    get_fallback_func*: ScriptInstanceGet
+
+    get_language_func*: ScriptInstanceGetLanguage
+
+    free_func*: ScriptInstanceFree
+
 type
   InitializationLevel* {.size: sizeof(cuint).} = enum
     Initialization_Core
@@ -412,10 +546,14 @@ type
   InterfaceRefGetObject* = proc (p_ref: ConstRefPtr): ObjectPtr {.gdcall, raises: [].}
   InterfaceRefSetObject* = proc (p_ref: RefPtr; p_object: ObjectPtr) {.gdcall, raises: [].}
   InterfaceScriptInstanceCreate* = proc (p_info: ptr ScriptInstanceInfo; p_instance_data: ScriptInstanceDataPtr): ScriptInstancePtr {.gdcall, raises: [].}
+  InterfaceScriptInstanceCreate2* = proc (p_info: ptr ScriptInstanceInfo2; p_instance_data: ScriptInstanceDataPtr): ScriptInstancePtr {.gdcall, raises: [].}
+  InterfaceScriptInstanceCreate3* = proc (p_info: ptr ScriptInstanceInfo3; p_instance_data: ScriptInstanceDataPtr): ScriptInstancePtr {.gdcall, raises: [].}
   InterfaceClassdbConstructObject* = proc (p_classname: ConstStringNamePtr): ObjectPtr {.gdcall, raises: [].}
   InterfaceClassdbGetMethodBind* = proc (p_classname: ConstStringNamePtr; p_methodname: ConstStringNamePtr; p_hash: Int): MethodBindPtr {.gdcall, raises: [].}
   InterfaceClassdbGetClassTag* = proc (p_classname: ConstStringNamePtr): pointer {.gdcall, raises: [].}
   InterfaceClassdbRegisterExtensionClass* = proc (p_library: ClassLibraryPtr; p_class_name: ConstStringNamePtr; p_parent_class_name: ConstStringNamePtr; p_extension_funcs: ptr ClassCreationInfo) {.gdcall, raises: [].}
+  InterfaceClassdbRegisterExtensionClass2* = proc ( p_info: ptr ScriptInstanceInfo2; p_instance_data: ScriptInstanceDataPtr): ScriptInstancePtr {.gdcall.}
+  InterfaceClassdbRegisterExtensionClass3* = proc ( p_info: ptr ScriptInstanceInfo3; p_instance_data: ScriptInstanceDataPtr): ScriptInstancePtr {.gdcall.}
   InterfaceClassdbRegisterExtensionClassMethod* = proc (p_library: ClassLibraryPtr; p_class_name: ConstStringNamePtr; p_method_info: ptr ClassMethodInfo) {.gdcall, raises: [].}
   InterfaceClassdbRegisterExtensionClassIntegerConstant* = proc (p_library: ClassLibraryPtr; p_class_name: ConstStringNamePtr; p_enum_name: ConstStringNamePtr; p_constant_name: ConstStringNamePtr; p_constant_value: Int; p_is_bitfield: Bool) {.gdcall, raises: [].}
   InterfaceClassdbRegisterExtensionClassProperty* = proc (p_library: ClassLibraryPtr; p_class_name: ConstStringNamePtr; p_info: ptr PropertyInfo; p_setter: ConstStringNamePtr; p_getter: ConstStringNamePtr) {.gdcall, raises: [].}
