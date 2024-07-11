@@ -5,13 +5,32 @@ import std/macros
 import std/hashes
 import std/tables
 
+type SYNC* = enum
+  INSTANTIATE      = "SYNC--------INSTANTIATE: "
+  CREATE_BIND      = "SYNC----CREATE(LIBRARY): "
+  CREATE_CALL      = "SYNC----CREATE(BUILTIN): "
+  FREE_BIND        = "SYNC------FREE(LIBRARY): "
+  FREE_CALL        = "SYNC------FREE(BUILTIN): "
+  REFERENCE        = "SYNC-REFERENCE(BUILTIN): "
+  REFERENCE_BIND   = "SYNC----------REFERENCE: "
+  UNREFERENCE_BIND = "SYNC----------REFERENCE: "
+  ENCODE           = "SYNC-------------ENCODE: "
+  DECODE           = "SYNC-------------DECODE: "
+  DECODE_RESULT    = "SYNC-----DECODE(RESULT): "
+  DESTROY          = "SYNC------------DESTROY: "
+
 type
   ObjectControlFlag* = enum
     OC_wasLocked
 
   ObjectControl* = object
     owner*: ObjectPtr
+    name*: string
     flags*: set[ObjectControlFlag]
+
+proc `=destroy`(obj: ObjectControl) =
+  echo SYNC.DESTROY, obj.name
+  discard
 
 type
   GodotClass* = ref object of RootObj
@@ -43,22 +62,41 @@ template CLASS_unlockDestroy(class: GodotClass) =
 template CLASS_create*[T: GodotClass](o: ObjectPtr): T =
   T(
     control: ObjectControl(
-      owner: o
+      owner: o,
+      name: $typeof T,
     )
   )
 
-template CLASS_sync_create*(class: GodotClass) =
+template CLASS_sync_instantiate*[T: SomeClass](class: T) =
+  echo SYNC.INSTANTIATE, $typeof T
+
+template CLASS_sync_create_bind*[T: SomeClass](class: T) =
+  echo SYNC.CREATE_BIND, $typeof T
   CLASS_lockDestroy class
-template CLASS_sync_free*(class: GodotClass) =
+template CLASS_sync_create_call*[T: SomeClass](class: T) =
+  echo SYNC.CREATE_CALL, $typeof T
+  CLASS_lockDestroy class
+
+template CLASS_sync_free_bind*[T: SomeClass](class: T) =
+  echo SYNC.FREE_BIND, $typeof T
+template CLASS_sync_free_call*[T: SomeClass](class: T) =
+  echo SYNC.FREE_CALL, $typeof T
+
   CLASS_unlockDestroy class
-template CLASS_sync_refer*(class: GodotClass; reference: bool): bool =
+template CLASS_sync_refer*[T: SomeClass](class: T; reference: bool): bool =
+  echo SYNC.REFERENCE, $typeof T
   true
-template CLASS_sync_encode*(class: GodotClass) =
+
+template CLASS_sync_encode*[T: SomeClass](class: T) =
+  echo SYNC.ENCODE, $typeof T
   discard
-template CLASS_sync_decode*(class: GodotClass) =
+template CLASS_sync_decode*[T: SomeClass](class: T) =
+  echo SYNC.DECODE, $typeof T
   discard
-template CLASS_sync_decode_result*(class: GodotClass) =
+template CLASS_sync_decode_result*[T: SomeClass](class: T) =
+  echo SYNC.DECODE_RESULT, $typeof T
   discard
+
 
 
 proc bind_virtuals*(_: typedesc[GodotClass]; T: typedesc) = discard
@@ -82,39 +120,36 @@ method free_propertyList*(self: GodotClass; p_list: ptr PropertyInfo) {.base.} =
 proc hash(node: NimNode): Hash = hash node.signatureHash
 macro Super*(Type: typedesc): typedesc =
   var cache {.global.}: Table[NimNode, NimNode]
-  let typeSym = Type.getTypeImpl[1]
+  var typedef = Type.getTypeInst[1].getImpl
+  while typedef[2].kind notin {nnkRefTy, nnkObjectTy}:
+    typedef = typedef[2].getTypeInst.getImpl
 
-  try:
-    result = cache[typesym]
-    return
+  var typesym = typedef[0]
+  if typesym.kind == nnkPragmaExpr: typesym = typesym[0]
 
-  except:
-    # hint lisprepr typesym.getimpl
-    let typeDef = typeSym.getImpl
-    case typeDef.kind
-    of nnkTypeDef:
-      let typedefop = typedef[2]
-      let objectty = case typedefop.kind
-      of nnkRefTy:
-        typedefop[0]
-      of nnkDotExpr:
-        typedefop.getTypeImpl[0].getImpl[2]
-      else:
-        error "Parse Error", Type
-        nil
+  if typesym in cache:
+    return cache[typesym]
 
-      let ofInherit = objectty[1]
-      case ofInherit.kind
-      of nnkOfInherit:
-        cache[typeSym] = ofInherit[0]
-        return ofInherit[0]
+  case typeDef.kind
+  of nnkTypeDef:
+    var objectTy = typedef[2]
+    if objectTy.kind == nnkRefTy:
+      objectTy = objectTy[0]
 
-      of nnkEmpty:
-        error "Type has no super object", Type
-      else:
-        error "Parse Error", Type
+    let ofInherit = objectTy[1]
 
-    of nnkNilLit:
-      error "Type is not object.", Type
+    case ofInherit.kind
+    of nnkOfInherit:
+      cache[typesym] = ofInherit[0]
+      return ofInherit[0]
+
+    of nnkEmpty:
+      error "Type has no super object", Type
     else:
-      error "Parse Error.", Type
+      error "Parse Error", Type
+
+  of nnkNilLit:
+    error "Type is not object.", Type
+  else:
+    error "Parse Error.", Type
+
